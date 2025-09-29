@@ -27,8 +27,6 @@ O **SAMoney** é um sistema financeiro desenvolvido para ajudar usuários a gere
 
 
 
----
 
-Se quiser, posso criar **uma versão visual do README** com **telas, ícones, badges de tecnologia e instruções detalhadas de cada funcionalidade**, para deixar o SAMoney mais profissional e atrativo.
 
 Quer que eu faça isso?
