@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["categoria"], $_POST["v
     $data = $_POST["data"];
     $uid = $_SESSION["usuario_id"];
 
-    $stmt = $conn->prepare("INSERT INTO despesas (usuario_id, categoria, valor, data) VALUES (?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO despesas (usuario_id, descricao, valor, data_despesa) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("isds", $uid, $categoria, $valor, $data);
     $stmt->execute();
     $stmt->close();
@@ -24,15 +24,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["categoria"], $_POST["v
 }
 
 // Buscar despesas do usuário
-$sql = "SELECT * FROM despesas WHERE usuario_id=" . $_SESSION["usuario_id"] . " ORDER BY data DESC";
+$sql = "SELECT * FROM despesas WHERE usuario_id=" . $_SESSION["usuario_id"] . " ORDER BY data_despesa DESC";
 $res = $conn->query($sql);
+
+// Buscar categorias distintas para o select do formulário
+$catQuery = $conn->query("SELECT DISTINCT descricao FROM despesas WHERE usuario_id=" . $_SESSION["usuario_id"]);
+$categoriasForm = [];
+while ($row = $catQuery->fetch_assoc()) {
+    $categoriasForm[] = $row['descricao'];
+}
 
 // Preparar dados para gráfico por categoria
 $categorias = [];
 $valores = [];
-$catRes = $conn->query("SELECT categoria, SUM(valor) as total FROM despesas WHERE usuario_id=".$_SESSION["usuario_id"]." GROUP BY categoria");
+$catRes = $conn->query("SELECT descricao, SUM(valor) as total FROM despesas WHERE usuario_id=" . $_SESSION["usuario_id"] . " GROUP BY descricao");
 while ($row = $catRes->fetch_assoc()) {
-    $categorias[] = $row['categoria'];
+    $categorias[] = $row['descricao'];
     $valores[] = $row['total'];
 }
 ?>
@@ -99,32 +106,42 @@ body { box-sizing: border-box; }
     <div class="sidebar shadow-lg flex-shrink-0">
         <div class="p-4">
             <nav class="space-y-2">
-                <a href="index.php" class="nav-item flex items-center px-4 py-3 text-white rounded-lg">
-                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-                    </svg> Início
-                </a>
-                <a href="despesas.php" class="nav-item flex items-center px-4 py-3 text-white rounded-lg">
-                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                    </svg> Despesas
-                </a>
-                <a href="financiamento.php" class="nav-item flex items-center px-4 py-3 text-white rounded-lg">
-                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 5a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd"/>
-                    </svg> Financiamento
-                </a>
-                <a href="investimentos.php" class="nav-item flex items-center px-4 py-3 text-white rounded-lg">
-                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg> Investimentos
-                </a>
-                <a href="educacao.php" class="nav-item flex items-center px-4 py-3 text-white rounded-lg">
-                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-                    </svg> Educação
-                </a>
-            </nav>
+            <a href="index.php" class="nav-item flex items-center px-4 py-3 text-white rounded-lg">
+                <!-- Início -->
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                </svg>
+                Início
+            </a>
+
+            <a href="despesas.php" class="nav-item flex items-center px-4 py-3 text-white rounded-lg">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                </svg>
+                Despesas
+            </a>
+
+            <a href="financiamento.php" class="nav-item flex items-center px-4 py-3 text-white rounded-lg">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 5a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                </svg>
+                Financiamento
+            </a>
+
+            <a href="investimentos.php" class="nav-item flex items-center px-4 py-3 text-white rounded-lg">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                Investimentos
+            </a>
+
+            <a href="educacao.php" class="nav-item  flex items-center px-4 py-3 text-white rounded-lg">
+                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                </svg>
+                Educação
+            </a>
+        </nav>
         </div>
     </div>
 
@@ -135,7 +152,16 @@ body { box-sizing: border-box; }
             <div class="lg:col-span-1 bg-white rounded-lg shadow-lg p-6 fade-in">
                 <h2 class="text-xl font-semibold mb-4">Adicionar Despesa</h2>
                 <form method="post">
-                    <input type="text" name="categoria" placeholder="Categoria" required class="w-full mb-2 px-3 py-2 border rounded-md input-focus">
+                    <select name="categoria" required class="w-full mb-2 px-3 py-2 border rounded-md input-focus">
+                    <option value="" disabled selected>Selecione uma categoria</option>
+                    <option value="Moradia">Moradia</option>
+                    <option value="Alimentação">Alimentação</option>
+                    <option value="Transporte">Transporte</option>
+                    <option value="Lazer">Lazer</option>
+                    <option value="Saúde">Saúde</option>
+                    <option value="Outros">Outros</option>
+                </select>
+
                     <input type="number" name="valor" step="0.01" placeholder="Valor" required class="w-full mb-2 px-3 py-2 border rounded-md input-focus">
                     <input type="date" name="data" required class="w-full mb-4 px-3 py-2 border rounded-md input-focus">
                     <button type="submit" class="w-full bg-orange-600 text-white py-2 px-4 rounded-md font-medium btn-hover">Adicionar</button>
@@ -160,33 +186,50 @@ body { box-sizing: border-box; }
             <!-- Lista de Despesas -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-lg shadow-lg p-6 mb-6 fade-in overflow-x-auto">
-                    <h2 class="text-xl font-semibold mb-4">Histórico de Despesas</h2>
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <?php
-                            $res->data_seek(0);
-                            if ($res->num_rows == 0) {
-                                echo '<tr><td colspan="3" class="text-center py-4 text-gray-500">Nenhuma despesa cadastrada ainda.</td></tr>';
-                            } else {
-                                while($row = $res->fetch_assoc()){
-                                    echo '<tr class="expense-item">';
-                                    echo '<td class="px-6 py-4">'.$row["categoria"].'</td>';
-                                    echo '<td class="px-6 py-4 text-red-600">R$ '.number_format($row["valor"],2,",",".").'</td>';
-                                    echo '<td class="px-6 py-4">'.$row["data"].'</td>';
-                                    echo '</tr>';
-                                }
-                            }
-                            ?>
-                        </tbody>
-                    </table>
-                </div>
+    <h2 class="text-xl font-semibold mb-4">Histórico de Despesas</h2>
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            <?php
+            // Primeiro SELECT
+            $res->data_seek(0); // Garante que o ponteiro do resultado esteja no início
+            if ($res->num_rows == 0) {
+                echo '<tr><td colspan="3" class="text-center py-4 text-gray-500">Nenhuma despesa cadastrada ainda.</td></tr>';
+            } else {
+                while($row = $res->fetch_assoc()){
+                    echo '<tr class="expense-item">';
+                    echo '<td class="px-6 py-4">'.$row["descricao"].'</td>';
+                    echo '<td class="px-6 py-4 text-red-600">R$ '.number_format($row["valor"],2,",",".").'</td>';
+                    echo '<td class="px-6 py-4">'.$row["data_despesa"].'</td>';
+                    echo '</tr>';
+                }
+            }
+
+            // Segundo SELECT
+            $sql2 = "SELECT descricao, valor, data_despesa FROM despesas WHERE categoria = 'Transporte' ORDER BY data_despesa DESC";
+            $res2 = $conn->query($sql2);
+
+            if ($res2 && $res2->num_rows > 0) {
+                echo '<tr><td colspan="3" class="text-left font-semibold text-gray-700 pt-6">Despesas com Transporte:</td></tr>';
+                while ($row2 = $res2->fetch_assoc()) {
+                    echo '<tr class="expense-item">';
+                    echo '<td class="px-6 py-4">'.$row2["descricao"].'</td>';
+                    echo '<td class="px-6 py-4 text-blue-600">R$ '.number_format($row2["valor"],2,",",".").'</td>';
+                    echo '<td class="px-6 py-4">'.$row2["data_despesa"].'</td>';
+                    echo '</tr>';
+                }
+            }
+            ?>
+        </tbody>
+    </table>
+</div>
+
 
                 <!-- Gráfico de Categorias -->
                 <div class="bg-white rounded-lg shadow-lg p-6 fade-in">

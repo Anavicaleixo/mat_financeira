@@ -18,7 +18,7 @@ $row = $res->fetch_assoc();
 $totalDespesas = $row['total'] ?? 0;
 
 // Total de investimentos
-$res = $conn->query("SELECT SUM(valor) AS total FROM investimentos WHERE usuario_id = $uid");
+$res = $conn->query("SELECT SUM(valor_investido) AS total FROM investimentos WHERE usuario_id = $uid");
 $row = $res->fetch_assoc();
 $totalInvestimentos = $row['total'] ?? 0;
 
@@ -50,84 +50,7 @@ body { box-sizing: border-box; font-family: sans-serif; background-color: #f9faf
 
 /* ====== Responsividade ====== */
 @media (max-width: 768px) {
-    .flex { flex-direction: column; }
-    .sidebar { width: 100%; position: relative; min-height: auto; }
-    .max-w-7xl { width: 100%; padding-left: 1rem; padding-right: 1rem; }
-    .grid { grid-template-columns: 1fr; }
-    nav div img { width: 150px; height: auto; }
-}
-@media (max-width: 480px) {
-    h1 { font-size: 1.75rem; }
-    .text-2xl { font-size: 1.25rem; }
-    .text-xl { font-size: 1rem; }
-    .px-4 { padding-left: 0.5rem; padding-right: 0.5rem; }
-    .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-}
-/* Responsividade extra sem alterar estrutura */
-@media (max-width: 768px) {
-  /* Sidebar vira barra horizontal scrollável */
-  .sidebar {
-    width: 100% !important;
-    height: auto !important;
-    position: relative !important;
-    display: flex !important;
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-  }
-  .sidebar .p-4 {
-    padding: 0.5rem !important;
-    display: flex !important;
-    flex-direction: row !important;
-  }
-  .sidebar nav {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 0.5rem !important;
-  }
-  .sidebar nav a.nav-item {
-    display: inline-flex !important;
-    flex: 0 0 auto !important;
-    min-width: 120px !important;
-    border-left: none !important;
-    border-bottom: 4px solid transparent !important;
-    white-space: nowrap !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-  .sidebar nav a.nav-item.active {
-    border-left: none !important;
-    border-bottom-color: #fbbf24 !important;
-  }
-  .sidebar nav a.nav-item:hover {
-    border-bottom-color: rgba(255,255,255,0.3) !important;
-  }
-  /* Logo menor para mobile */
-  nav div img {
-    width: 120px !important;
-    height: auto !important;
-    max-height: 50px !important;
-    object-fit: contain !important;
-  }
-  /* Cards com margem inferior para espaçamento */
-  .card-hover {
-    margin-bottom: 1rem !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .sidebar nav a.nav-item {
-    min-width: 100px !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-    font-size: 0.875rem !important;
-  }
-  nav div img {
-    width: 100px !important;
-  }
-}
-/* Responsividade extra sem alterar estrutura - Versão atualizada para mobile */
-@media (max-width: 768px) {
-  /* Sidebar vira barra horizontal scrollável */
+  .flex { flex-direction: column; }
   .sidebar {
     width: 100% !important;
     height: auto !important;
@@ -164,20 +87,19 @@ body { box-sizing: border-box; font-family: sans-serif; background-color: #f9faf
     border-bottom-color: rgba(255,255,255,0.3) !important;
   }
   
-  /* Esconder nome do usuário no mobile */
+  /* Esconde nome do usuário no mobile */
   nav span.text-white {
     display: none !important;
   }
   
-  /* Logo maior no celular (sem nome do usuário, ocupa mais espaço) */
+  /* Logo maior em mobile */
   nav div img {
     width: 200px !important;
-    height: auto !important;
     max-height: 60px !important;
     object-fit: contain !important;
   }
-  
-  /* Ajuste no container da navbar para centralizar logo melhor sem o nome */
+
+  /* Centralizar logo melhor */
   nav > div > div.flex.justify-between {
     justify-content: center !important;
   }
@@ -185,8 +107,8 @@ body { box-sizing: border-box; font-family: sans-serif; background-color: #f9faf
     justify-content: flex-end !important;
     width: auto !important;
   }
-  
-  /* Cards com margem inferior para espaçamento */
+
+  /* Espaçamento extra entre cards */
   .card-hover {
     margin-bottom: 1rem !important;
   }
@@ -195,18 +117,14 @@ body { box-sizing: border-box; font-family: sans-serif; background-color: #f9faf
 @media (max-width: 480px) {
   .sidebar nav a.nav-item {
     min-width: 100px !important;
+    font-size: 0.875rem !important;
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
-    font-size: 0.875rem !important;
   }
-  
-  /* Logo ainda maior em telas muito pequenas */
   nav div img {
     width: 180px !important;
     max-height: 55px !important;
   }
-  
-  /* Manter esconder nome do usuário */
   nav span.text-white {
     display: none !important;
   }
@@ -215,20 +133,21 @@ body { box-sizing: border-box; font-family: sans-serif; background-color: #f9faf
 </head>
 <body>
 
-<!-- Nav -->
+<!-- Navbar -->
 <nav class="gradient-bg shadow-lg sticky top-0 z-50">
   <div class="w-full mx-auto">
-    <div class="flex justify-between h-16 items-center px-4">
-      <div class="flex items-center text-white font-bold text-xl">
+    <div class="flex justify-between h-16 items-center px-0">
+      <div class="flex items-start text-white font-bold text-xl">
         <img src="logo.png" alt="Logo SAMoney" class="w-[195px] h-[300px]">
       </div>
       <div class="flex items-center space-x-4">
         <span class="text-white">Olá, <?= $_SESSION['usuario_nome'] ?? 'Usuário' ?>!</span>
-        <a href="logout.php" class="text-white hover:text-yellow-200 px-3 py-2 rounded-md text-sm font-medium btn-hover">Sair</a>
+        <a href="logout.php" class="text-white hover:text-yellow-200 px-3 py-2 rounded-md text-sm font-medium">Sair</a>
       </div>
     </div>
   </div>
 </nav>
+
 
 <div class="flex">
   <!-- Sidebar -->

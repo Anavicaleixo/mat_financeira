@@ -20,11 +20,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $montante = $valor * pow(1 + $juros, $anos);
     $resultado = "Tipo: " . ucfirst(str_replace("_", " ", $tipo_investimento)) . " | Montante final: R$ " . number_format($montante, 2, ",", ".");
 
-    // Inserir no banco
-    $stmt = $conn->prepare("INSERT INTO investimentos (usuario_id, tipo, valor, prazo, taxa, resultado, data_registro) VALUES (?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("isddds", $uid, $tipo_investimento, $valor, $anos, $juros, $montante);
-    $stmt->execute();
-    $stmt->close();
+   // Converter anos para meses se necessário
+$prazo_meses = $anos * 12; // se $anos for anos
+
+// Inserir no banco
+$stmt = $conn->prepare("INSERT INTO investimentos (usuario_id, tipo, valor_investido, prazo, taxa_retorno, resultado, data_investimento) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+
+// Corrigir tipos: i = integer, s = string, d = double/float
+$stmt->bind_param("isdddd", $uid, $tipo_investimento, $valor, $prazo_meses, $juros, $montante);
+
+$stmt->execute();
+$stmt->close();
+
 }
 
 // Exemplos inspiracionais
