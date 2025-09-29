@@ -27,6 +27,3 @@ O **SAMoney** é um sistema financeiro desenvolvido para ajudar usuários a gere
 
 
 
-
-
-Quer que eu faça isso?
